@@ -1,116 +1,355 @@
 
 <!DOCTYPE html>
-<html lang="sw">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bongo Life</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bongo Life 3D</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#18251e;color:white;font-family:Arial,sans-serif;text-align:center}
-header{padding:12px;background:#101914}
-h2{margin:4px;color:#72efad}
-#stats{display:flex;justify-content:space-around;gap:5px;padding:12px;font-size:14px}
-#game{display:block;width:100%;max-width:600px;margin:auto;background:#9bc77d;touch-action:none}
-#controls{max-width:400px;margin:12px auto;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px}
-button{border:0;border-radius:10px;padding:14px;background:#24784d;color:white;font-size:16px;font-weight:bold}
-button:active{background:#43b979}
-#message{padding:10px;min-height:40px;color:#ffe18a}
-.actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;padding:8px}
+body{margin:0;overflow:hidden;background:#9dd8ff;font-family:Arial;color:white}
+#game{position:fixed;inset:0}
+#hud{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;pointer-events:none}
+.panel{background:#10231ddd;padding:12px;border-radius:12px;font-size:13px;line-height:1.7}
+#help{position:absolute;top:105px;left:12px;background:#10231dcc;padding:8px;border-radius:8px;font-size:12px}
+#controls{position:absolute;bottom:22px;left:0;right:0;display:flex;justify-content:space-between;align-items:end;padding:0 18px}
+.pad{display:grid;grid-template-columns:54px 54px 54px;grid-template-rows:54px 54px;gap:5px}
+button{border:1px solid #ffffff77;border-radius:14px;background:#172b39dd;color:white;font-size:23px;touch-action:none}
+.pad button{width:54px;height:54px}
+#up{grid-column:2;grid-row:1}
+#left{grid-column:1;grid-row:2}
+#down{grid-column:2;grid-row:2}
+#right{grid-column:3;grid-row:2}
+#actions{display:flex;flex-direction:column;gap:10px}
+#actions button{padding:12px;font-size:13px}
+#look{position:absolute;right:20px;bottom:165px;font-size:11px;background:#172b39cc;padding:8px;border-radius:8px}
 </style>
 </head>
 <body>
-<header>
-<h2>🏙️ BONGO LIFE</h2>
-<div>Safari yako ya maisha inaanza hapa!</div>
-</header>
-<div id="stats">
-<span>💵 <b id="cash">50,000</b></span>
-<span>⚡ <b id="energy">100</b></span>
-<span>📅 Siku <b id="day">1</b></span>
+<div id="game"></div>
+
+<div id="hud">
+  <div class="panel">
+    <b>🇹🇿 BONGO LIFE 3D</b><br>
+    Day <span id="day">1</span> | Dar es Salaam
+  </div>
+  <div class="panel">
+    Cash: TSh <span id="cash">10,000</span><br>
+    Energy: <span id="energy">100</span>%
+  </div>
 </div>
-<canvas id="game" width="360" height="480"></canvas>
-<div id="message">Karibu Dar es Salaam! Tembea mjini.</div>
+
+<div id="help">Explore the city • Move to walk</div>
+<div id="look">Drag the screen to look around</div>
+
 <div id="controls">
-<span></span><button data-move="up">⬆️</button><span></span>
-<button data-move="left">⬅️</button>
-<button data-move="down">⬇️</button>
-<button data-move="right">➡️</button>
+  <div class="pad">
+    <button id="up">▲</button>
+    <button id="left">◀</button>
+    <button id="down">▼</button>
+    <button id="right">▶</button>
+  </div>
+  <div id="actions">
+    <button id="work">💼 Find work</button>
+    <button id="food">🍔 Buy food</button>
+    <button id="run">🏃 Run: OFF</button>
+  </div>
 </div>
-<div class="actions">
-<button id="work">💼 Tafuta kazi</button>
-<button id="food">🍛 Nunua chakula (5k)</button>
-</div>
-<script>
-const c=document.getElementById("game");
-const ctx=c.getContext("2d");
-let player={x:180,y:330};
-let cash=50000,energy=100,day=1;
-let buildings=[
-{x:15,y:45,w:90,h:85,color:"#dfb987",name:"DUKA"},
-{x:135,y:25,w:90,h:105,color:"#c9d7e0",name:"NYUMBA"},
-{x:255,y:55,w:90,h:75,color:"#e9ce80",name:"SHOP"},
-{x:20,y:190,w:100,h:75,color:"#d5a48b",name:"NYUMBA"},
-{x:240,y:180,w:100,h:90,color:"#c2d1b0",name:"HOTEL"}
+
+<script type="module">
+import * as THREE from
+'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x9dd8ff);
+scene.fog = new THREE.Fog(0x9dd8ff, 45, 150);
+
+const camera = new THREE.PerspectiveCamera(
+  65, innerWidth / innerHeight, 0.1, 300
+);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.getElementById('game').appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x62734b,2));
+
+const sun = new THREE.DirectionalLight(0xffffff,2.5);
+sun.position.set(-25,40,20);
+sun.castShadow = true;
+scene.add(sun);
+
+function material(color){
+  return new THREE.MeshStandardMaterial({color,roughness:0.9});
+}
+const green=material(0x6eaa58);
+const roadmat=material(0x42474c);
+const concrete=material(0xc5c4b9);
+const white=material(0xffffff);
+
+function cube(w,h,d,mat,x,y,z,parent=scene){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+  m.position.set(x,y,z);
+  m.castShadow=true;
+  m.receiveShadow=true;
+  parent.add(m);
+  return m;
+}
+
+// Ground and roads
+cube(220,0.3,220,green,0,-0.2,0);
+cube(15,0.12,200,roadmat,0,0,-10);
+cube(200,0.12,13,roadmat,0,0,-12);
+
+for(let z=-100;z<100;z+=8){
+  cube(0.18,0.025,3,white,0,0.08,z);
+}
+for(let x=-95;x<100;x+=8){
+  cube(3,0.025,0.18,white,x,0.08,-12);
+}
+
+// Sidewalks
+cube(2,0.2,200,concrete,-9,0,-10);
+cube(2,0.2,200,concrete,9,0,-10);
+cube(200,0.2,2,concrete,0,0,-19);
+
+// Buildings
+const colors=[
+  0xe5c7a0,0xd8d6c8,0xc6a18b,
+  0xf0d5aa,0xb8c8c7,0xd9b5a0
 ];
-function draw(){
-ctx.clearRect(0,0,360,480);
-ctx.fillStyle="#8fbd70";ctx.fillRect(0,0,360,480);
-ctx.fillStyle="#656b70";ctx.fillRect(0,140,360,55);
-ctx.fillStyle="#eee0a3";for(let x=0;x<360;x+=45)ctx.fillRect(x,166,25,3);
-buildings.forEach(b=>{
-ctx.fillStyle=b.color;ctx.fillRect(b.x,b.y,b.w,b.h);
-ctx.fillStyle="#746454";ctx.fillRect(b.x-3,b.y-5,b.w+6,8);
-ctx.fillStyle="#8dd8e8";
-for(let x=b.x+12;x<b.x+b.w-8;x+=28){
-ctx.fillRect(x,b.y+14,15,19);
+
+function building(x,z,w,d,h,color){
+  const bmat=material(color);
+  cube(w,h,d,bmat,x,h/2,z);
+
+  // Roof edge
+  cube(w+0.25,0.18,d+0.25,
+       material(0x8b8980),x,h+0.08,z);
+
+  // Windows
+  const glass=material(0x537d91);
+  const floors=Math.max(1,Math.floor(h/3));
+  const cols=Math.max(1,Math.floor(w/2.3));
+
+  for(let f=0;f<floors;f++){
+    for(let c=0;c<cols;c++){
+      const wx=x-w/2+(c+0.5)*w/cols;
+      const wy=1.3+f*2.5;
+      if(wy<h-0.3){
+        cube(0.8,1.1,0.06,glass,wx,wy,z-d/2-0.04);
+      }
+    }
+  }
+
+  // Shopfront
+  if(h<8){
+    cube(1.4,1.6,0.08,glass,x-1,0.95,z-d/2-0.06);
+    cube(1.2,0.12,0.35,material(0xe8b83f),
+         x,h+0.4,z-d/2-0.1);
+  }
 }
-ctx.fillStyle="#5b4736";ctx.fillRect(b.x+b.w/2-9,b.y+b.h-25,18,25);
-ctx.fillStyle="#243528";ctx.font="bold 9px Arial";
-ctx.fillText(b.name,b.x+5,b.y+b.h+12);
-});
-ctx.fillStyle="#367f4d";ctx.beginPath();ctx.arc(320,320,18,0,Math.PI*2);ctx.fill();
-ctx.fillStyle="#76513a";ctx.fillRect(316,328,8,18);
-ctx.fillStyle="#2566c2";ctx.fillRect(player.x-10,player.y-15,20,25);
-ctx.fillStyle="#8b573a";ctx.beginPath();ctx.arc(player.x,player.y-22,9,0,Math.PI*2);ctx.fill();
-ctx.fillStyle="#fff";ctx.font="bold 10px Arial";ctx.fillText("WEWE",player.x-14,player.y+22);
-ctx.fillStyle="#263e2b";ctx.font="12px Arial";ctx.fillText("DAR ES SALAAM",105,465);
+
+for(let z=-75;z<75;z+=19){
+  building(-16,z,8,10,5+Math.random()*5,
+    colors[Math.floor(Math.random()*colors.length)]);
+  building(16,z,9,10,6+Math.random()*12,
+    colors[Math.floor(Math.random()*colors.length)]);
 }
-function update(){
-document.getElementById("cash").textContent=cash.toLocaleString("en-US");
-document.getElementById("energy").textContent=energy;
-document.getElementById("day").textContent=day;
-draw();
+
+for(let x=-75;x<=75;x+=17){
+  if(Math.abs(x)>12){
+    building(x,-29,9,9,5+Math.random()*6,
+      colors[Math.floor(Math.random()*colors.length)]);
+  }
 }
-function move(d){
-if(energy<2){say("Umechoka! Pumzika au nunua chakula.");return;}
-let step=12;
-if(d==="up")player.y-=step;
-if(d==="down")player.y+=step;
-if(d==="left")player.x-=step;
-if(d==="right")player.x+=step;
-player.x=Math.max(12,Math.min(348,player.x));
-player.y=Math.max(20,Math.min(440,player.y));
-energy=Math.max(0,energy-2);
-say("Unaendelea kuchunguza mji wa Bongo.");
-update();
+
+// Trees
+const trunkmat=material(0x755036);
+const leafmat=material(0x287849);
+
+function tree(x,z){
+  cube(0.45,2,0.45,trunkmat,x,1,z);
+  const crown=new THREE.Mesh(
+    new THREE.SphereGeometry(1.6,8,7),leafmat
+  );
+  crown.position.set(x,3,z);
+  crown.castShadow=true;
+  scene.add(crown);
 }
-function say(t){document.getElementById("message").textContent=t;}
-document.querySelectorAll("[data-move]").forEach(b=>{
-b.addEventListener("click",()=>move(b.dataset.move));
-});
-document.getElementById("work").onclick=()=>{
-cash+=25000;energy=Math.max(0,energy-15);day++;
-say("Hongera! Umepata TSh 25,000 kwa kazi yako.");
-update();
+for(let z=-85;z<85;z+=12){
+  tree(-11,z);
+  tree(11,z+4);
+}
+
+// Character group: third-person player
+const player=new THREE.Group();
+scene.add(player);
+
+const skin=material(0x8c5938);
+const shirt=material(0x2364a1);
+const pants=material(0x292e38);
+const shoes=material(0x242424);
+const hair=material(0x171717);
+
+cube(0.8,0.95,0.42,shirt,0,1.55,0,player);
+cube(0.48,0.48,0.48,skin,0,2.3,0,player);
+cube(0.5,0.17,0.5,hair,0,2.57,0,player);
+
+// Legs
+const legs=[];
+for(const x of [-0.22,0.22]){
+  const leg=new THREE.Group();
+  leg.position.set(x,1.05,0);
+  player.add(leg);
+  cube(0.28,0.85,0.3,pants,0,-0.15,0,leg);
+  cube(0.3,0.18,0.42,shoes,0,-0.57,-0.05,leg);
+  legs.push(leg);
+}
+
+// Arms
+for(const x of [-0.53,0.53]){
+  cube(0.23,0.85,0.27,shirt,x,1.52,0,player);
+}
+
+// Start on road
+player.position.set(0,0,5);
+
+let cash=10000,energy=100,day=1;
+let yaw=0,running=false;
+const keys={up:false,down:false,left:false,right:false};
+const velocity=new THREE.Vector3();
+
+function bind(id,key){
+  const el=document.getElementById(id);
+  el.addEventListener('pointerdown',e=>{
+    e.preventDefault();keys[key]=true;
+    el.setPointerCapture(e.pointerId);
+  });
+  const release=e=>{keys[key]=false};
+  el.addEventListener('pointerup',release);
+  el.addEventListener('pointercancel',release);
+  el.addEventListener('lostpointercapture',release);
+}
+bind('up','up');
+bind('down','down');
+bind('left','left');
+bind('right','right');
+
+document.getElementById('run').onclick=()=>{
+  running=!running;
+  document.getElementById('run').textContent=
+    '🏃 Run: '+(running?'ON':'OFF');
 };
-document.getElementById("food").onclick=()=>{
-if(cash<5000){say("Pesa haitoshi kununua chakula.");return;}
-cash-=5000;energy=Math.min(100,energy+25);
-say("Umenunua chakula. Nguvu zako zimeongezeka!");
-update();
+
+document.getElementById('work').onclick=()=>{
+  cash+=5000;
+  energy=Math.max(0,energy-15);
+  document.getElementById('cash').textContent=
+    cash.toLocaleString('en-US');
+  document.getElementById('energy').textContent=energy;
+  alert('You completed a small job! +TSh 5,000');
 };
-update();
+
+document.getElementById('food').onclick=()=>{
+  if(cash>=1000){
+    cash-=1000;
+    energy=Math.min(100,energy+25);
+    document.getElementById('cash').textContent=
+      cash.toLocaleString('en-US');
+    document.getElementById('energy').textContent=energy;
+    alert('You bought food! Energy restored.');
+  }else alert('Not enough money!');
+};
+
+// Drag screen to rotate camera
+let dragging=false,lastX=0;
+renderer.domElement.addEventListener('pointerdown',e=>{
+  dragging=true;lastX=e.clientX;
+});
+renderer.domElement.addEventListener('pointermove',e=>{
+  if(dragging){
+    yaw-=(e.clientX-lastX)*0.006;
+    lastX=e.clientX;
+  }
+});
+renderer.domElement.addEventListener('pointerup',()=>dragging=false);
+renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
+
+const clock=new THREE.Clock();
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),0.05);
+
+  let forward=0,side=0;
+  if(keys.up)forward+=1;
+  if(keys.down)forward-=1;
+  if(keys.left)side-=1;
+  if(keys.right)side+=1;
+
+  const moving=forward!==0||side!==0;
+  const speed=running?8:4;
+
+  if(moving){
+    const len=Math.hypot(forward,side);
+    forward/=len;side/=len;
+
+    const fx=-Math.sin(yaw);
+    const fz=-Math.cos(yaw);
+    const rx=Math.cos(yaw);
+    const rz=-Math.sin(yaw);
+
+    player.position.x+=(fx*forward+rx*side)*speed*dt;
+    player.position.z+=(fz*forward+rz*side)*speed*dt;
+
+    player.rotation.y=Math.atan2(
+      fx*forward+rx*side,
+      fz*forward+rz*side
+    )+Math.PI;
+
+    legs[0].rotation.x=Math.sin(performance.now()*0.012)*0.6;
+    legs[1].rotation.x=-legs[0].rotation.x;
+
+    if(running)energy=Math.max(0,energy-3*dt);
+  }else{
+    legs[0].rotation.x=0;
+    legs[1].rotation.x=0;
+  }
+
+  // Follow camera from behind
+  const distance=7;
+  const height=4;
+  const target=new THREE.Vector3(
+    player.position.x+Math.sin(yaw)*distance,
+    height,
+    player.position.z+Math.cos(yaw)*distance
+  );
+
+  camera.position.lerp(target,1-Math.exp(-5*dt));
+  camera.lookAt(
+    player.position.x,
+    player.position.y+1.4,
+    player.position.z
+  );
+
+  document.getElementById('energy').textContent=
+    Math.round(energy);
+
+  renderer.render(scene,camera);
+}
+
+camera.position.set(0,4,12);
+animate();
+
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
 </script>
 </body>
 </html>
