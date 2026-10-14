@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bongo Life</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#18251e;color:white;font-family:Arial,sans-serif;text-align:center}
+header{padding:12px;background:#101914}
+h2{margin:4px;color:#72efad}
+#stats{display:flex;justify-content:space-around;gap:5px;padding:12px;font-size:14px}
+#game{display:block;width:100%;max-width:600px;margin:auto;background:#9bc77d;touch-action:none}
+#controls{max-width:400px;margin:12px auto;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px}
+button{border:0;border-radius:10px;padding:14px;background:#24784d;color:white;font-size:16px;font-weight:bold}
+button:active{background:#43b979}
+#message{padding:10px;min-height:40px;color:#ffe18a}
+.actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;padding:8px}
+</style>
+</head>
+<body>
+<header>
+<h2>🏙️ BONGO LIFE</h2>
+<div>Safari yako ya maisha inaanza hapa!</div>
+</header>
+<div id="stats">
+<span>💵 <b id="cash">50,000</b></span>
+<span>⚡ <b id="energy">100</b></span>
+<span>📅 Siku <b id="day">1</b></span>
+</div>
+<canvas id="game" width="360" height="480"></canvas>
+<div id="message">Karibu Dar es Salaam! Tembea mjini.</div>
+<div id="controls">
+<span></span><button data-move="up">⬆️</button><span></span>
+<button data-move="left">⬅️</button>
+<button data-move="down">⬇️</button>
+<button data-move="right">➡️</button>
+</div>
+<div class="actions">
+<button id="work">💼 Tafuta kazi</button>
+<button id="food">🍛 Nunua chakula (5k)</button>
+</div>
+<script>
+const c=document.getElementById("game");
+const ctx=c.getContext("2d");
+let player={x:180,y:330};
+let cash=50000,energy=100,day=1;
+let buildings=[
+{x:15,y:45,w:90,h:85,color:"#dfb987",name:"DUKA"},
+{x:135,y:25,w:90,h:105,color:"#c9d7e0",name:"NYUMBA"},
+{x:255,y:55,w:90,h:75,color:"#e9ce80",name:"SHOP"},
+{x:20,y:190,w:100,h:75,color:"#d5a48b",name:"NYUMBA"},
+{x:240,y:180,w:100,h:90,color:"#c2d1b0",name:"HOTEL"}
+];
+function draw(){
+ctx.clearRect(0,0,360,480);
+ctx.fillStyle="#8fbd70";ctx.fillRect(0,0,360,480);
+ctx.fillStyle="#656b70";ctx.fillRect(0,140,360,55);
+ctx.fillStyle="#eee0a3";for(let x=0;x<360;x+=45)ctx.fillRect(x,166,25,3);
+buildings.forEach(b=>{
+ctx.fillStyle=b.color;ctx.fillRect(b.x,b.y,b.w,b.h);
+ctx.fillStyle="#746454";ctx.fillRect(b.x-3,b.y-5,b.w+6,8);
+ctx.fillStyle="#8dd8e8";
+for(let x=b.x+12;x<b.x+b.w-8;x+=28){
+ctx.fillRect(x,b.y+14,15,19);
+}
+ctx.fillStyle="#5b4736";ctx.fillRect(b.x+b.w/2-9,b.y+b.h-25,18,25);
+ctx.fillStyle="#243528";ctx.font="bold 9px Arial";
+ctx.fillText(b.name,b.x+5,b.y+b.h+12);
+});
+ctx.fillStyle="#367f4d";ctx.beginPath();ctx.arc(320,320,18,0,Math.PI*2);ctx.fill();
+ctx.fillStyle="#76513a";ctx.fillRect(316,328,8,18);
+ctx.fillStyle="#2566c2";ctx.fillRect(player.x-10,player.y-15,20,25);
+ctx.fillStyle="#8b573a";ctx.beginPath();ctx.arc(player.x,player.y-22,9,0,Math.PI*2);ctx.fill();
+ctx.fillStyle="#fff";ctx.font="bold 10px Arial";ctx.fillText("WEWE",player.x-14,player.y+22);
+ctx.fillStyle="#263e2b";ctx.font="12px Arial";ctx.fillText("DAR ES SALAAM",105,465);
+}
+function update(){
+document.getElementById("cash").textContent=cash.toLocaleString("en-US");
+document.getElementById("energy").textContent=energy;
+document.getElementById("day").textContent=day;
+draw();
+}
+function move(d){
+if(energy<2){say("Umechoka! Pumzika au nunua chakula.");return;}
+let step=12;
+if(d==="up")player.y-=step;
+if(d==="down")player.y+=step;
+if(d==="left")player.x-=step;
+if(d==="right")player.x+=step;
+player.x=Math.max(12,Math.min(348,player.x));
+player.y=Math.max(20,Math.min(440,player.y));
+energy=Math.max(0,energy-2);
+say("Unaendelea kuchunguza mji wa Bongo.");
+update();
+}
+function say(t){document.getElementById("message").textContent=t;}
+document.querySelectorAll("[data-move]").forEach(b=>{
+b.addEventListener("click",()=>move(b.dataset.move));
+});
+document.getElementById("work").onclick=()=>{
+cash+=25000;energy=Math.max(0,energy-15);day++;
+say("Hongera! Umepata TSh 25,000 kwa kazi yako.");
+update();
+};
+document.getElementById("food").onclick=()=>{
+if(cash<5000){say("Pesa haitoshi kununua chakula.");return;}
+cash-=5000;energy=Math.min(100,energy+25);
+say("Umenunua chakula. Nguvu zako zimeongezeka!");
+update();
+};
+update();
+</script>
+</body>
+</html>
