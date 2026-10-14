@@ -185,37 +185,77 @@ for(let z=-85;z<85;z+=12){
   tree(11,z+4);
 }
 
-// Character group: third-person player
-const player=new THREE.Group();
+
+ // Character group: smoother 3D player
+const player = new THREE.Group();
 scene.add(player);
 
-const skin=material(0x8c5938);
-const shirt=material(0x2364a1);
-const pants=material(0x292e38);
-const shoes=material(0x242424);
-const hair=material(0x171717);
+const skin = material(0x8c5938);
+const shirt = material(0x2364a1);
+const pants = material(0x292e38);
+const shoes = material(0x202020);
+const hair = material(0x171311);
+const eyesMat = material(0x171717);
 
-cube(0.8,0.95,0.42,shirt,0,1.55,0,player);
-cube(0.48,0.48,0.48,skin,0,2.3,0,player);
-cube(0.5,0.17,0.5,hair,0,2.57,0,player);
+function oval(w, h, d, mat, x, y, z, parent) {
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 20, 16),
+    mat
+  );
+  mesh.scale.set(w, h, d);
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+
+function limb(radius, height, mat, x, y, parent) {
+  const mesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(radius * 0.85, radius, height, 16),
+    mat
+  );
+  mesh.position.set(x, y, 0);
+  mesh.castShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+
+// Torso, neck and head
+oval(0.43, 0.55, 0.27, shirt, 0, 1.55, 0, player);
+limb(0.13, 0.18, skin, 0, 2.08, player);
+oval(0.29, 0.34, 0.28, skin, 0, 2.35, 0, player);
+
+// Hair and face
+oval(0.29, 0.13, 0.29, hair, 0, 2.61, 0.015, player);
+oval(0.055, 0.045, 0.025, eyesMat, -0.105, 2.38, -0.253, player);
+oval(0.055, 0.045, 0.025, eyesMat, 0.105, 2.38, -0.253, player);
+oval(0.045, 0.055, 0.045, skin, 0, 2.30, -0.285, player);
 
 // Legs
-const legs=[];
-for(const x of [-0.22,0.22]){
-  const leg=new THREE.Group();
-  leg.position.set(x,1.05,0);
+const legs = [];
+for (const x of [-0.21, 0.21]) {
+  const leg = new THREE.Group();
+  leg.position.set(x, 1.12, 0);
   player.add(leg);
-  cube(0.28,0.85,0.3,pants,0,-0.15,0,leg);
-  cube(0.3,0.18,0.42,shoes,0,-0.57,-0.05,leg);
+
+  limb(0.13, 0.67, pants, 0, -0.30, leg);
+  oval(0.15, 0.09, 0.23, shoes, 0, -0.65, -0.07, leg);
   legs.push(leg);
 }
 
-// Arms
-for(const x of [-0.53,0.53]){
-  cube(0.23,0.85,0.27,shirt,x,1.52,0,player);
+// Arms with shoulder pivots
+const arms = [];
+for (const x of [-0.49, 0.49]) {
+  const arm = new THREE.Group();
+  arm.position.set(x, 1.87, 0);
+  player.add(arm);
+
+  limb(0.105, 0.61, shirt, 0, -0.31, arm);
+  oval(0.095, 0.12, 0.10, skin, 0, -0.66, 0, arm);
+  arms.push(arm);
 }
 
-// Start on road
 player.position.set(0,0,5);
 
 let cash=10000,energy=100,day=1;
