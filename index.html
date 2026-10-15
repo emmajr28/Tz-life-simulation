@@ -224,8 +224,8 @@ loader.load(
     player.add(model);
 
     if (model.animations && model.animations.length > 0) {
-      mixer = new THREE.AnimationMixer(model);
-      mixer.clipAction(model.animations[0]).play();
+  mixer = new THREE.AnimationMixer(model);
+  walkAction = mixer.clipAction(model.animations[0]);
     }
 
     console.log('Mixamo character loaded!');
