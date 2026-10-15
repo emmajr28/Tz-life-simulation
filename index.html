@@ -327,13 +327,9 @@ function animate(){
       fz*forward+rz*side
     )+Math.PI;
 
-    legs[0].rotation.x=Math.sin(performance.now()*0.012)*0.6;
-    legs[1].rotation.x=-legs[0].rotation.x;
-
+    
     if(running)energy=Math.max(0,energy-3*dt);
   }else{
-    legs[0].rotation.x=0;
-    legs[1].rotation.x=0;
   }
 
   // Follow camera from behind
