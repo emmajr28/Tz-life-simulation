@@ -313,6 +313,12 @@ function animate(){
 
   const moving=forward!==0||side!==0;
   const speed=running?8:4;
+  if (walkAction && moving !== wasMoving) {
+  if (moving) walkAction.reset().play();
+  else walkAction.stop();
+}
+wasMoving = moving;
+  
 
   if(moving){
     const len=Math.hypot(forward,side);
