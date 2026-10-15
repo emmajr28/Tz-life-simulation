@@ -299,6 +299,7 @@ const clock=new THREE.Clock();
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),0.05);
+  if (mixer) mixer.update(dt);
 
   let forward=0,side=0;
   if(keys.up)forward+=1;
